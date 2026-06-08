@@ -273,7 +273,7 @@ const PLAN = [
       { text: 'Band pull-aparts — 2 × 15', dur: '1 min' },
       { text: 'Shoulder dislocates with band — 10 reps (improves overhead mobility)', dur: '1 min' },
       { text: 'Push-up to downward dog — 8 reps', dur: '1 min' },
-      { text: 'Warm-up sets on first compound movement', dur: '3 min' },
+      { text: 'Warm-up sets on first compound movement: empty bar × 10, 40% × 8, 60% × 5', dur: '3 min' },
     ],
     exercises: [
       { name: 'Incline barbell or dumbbell press', sets: '4 × 8–10', note: 'Alternate with Day 1 flat press as primary movement.' },
@@ -422,9 +422,28 @@ function renderDayPanel() {
     `<div class="warmup-item"><div class="warmup-dot"></div><span>${w.text}</span><span class="warmup-duration">${w.dur}</span></div>`
   ).join('');
 
-  let exHtml = day.exercises.map((ex, ei) => {
+  const warmupNote = `<div style="margin-top:10px; padding:10px 12px; background:var(--surface3); border-radius:var(--radius-sm); font-size:12px; color:var(--text2); line-height:1.6;">
+    <strong style="color:var(--accent); font-weight:500;">Important:</strong> These warm-up sets are <em>not</em> logged in the tracker and do <em>not</em> count toward your working sets. 
+    Complete the full warm-up sequence above <strong style="font-weight:500;">before</strong> starting your first exercise. 
+    The barbell/weight warm-up sets listed (empty bar, 40%, 60%) are sub-maximal — they prime your joints and nervous system only. 
+    You will not feel fatigued from them. Once done, move straight into your working sets below.
+  </div>`;
+
+  const workingSetsNote = `<div style="margin-bottom:10px; padding:10px 12px; background:var(--accent-bg); border:1px solid rgba(200,255,87,0.2); border-radius:var(--radius-sm); font-size:12px; color:var(--text2); line-height:1.6;">
+    <strong style="color:var(--accent); font-weight:500;">Working sets</strong> — these are your full-effort sets logged below. 
+    Use the <strong style="font-weight:500;">same weight across all sets</strong> (straight sets). 
+    When you can complete all sets at the top of the rep range with good form, add <strong style="font-weight:500;">2.5–5kg next session</strong>. 
+    Rest <strong style="font-weight:500;">60–90 sec</strong> between sets for isolation exercises, <strong style="font-weight:500;">2–3 min</strong> for compound lifts (bench, deadlift, RDL, leg press).
+    Tick ✓ each set as you complete it.
+  </div>`;
+
+  let exHtml = workingSetsNote + day.exercises.map((ex, ei) => {
     const key = 'ex' + ei;
     if (!dd.sets[key]) dd.sets[key] = [{ kg: '', reps: '', done: false }];
+    const repRange = ex.sets;
+    const isCompound = ['bench','deadlift','rdl','romanian','leg press','hip thrust','row','pulldown','pull-up'].some(k => ex.name.toLowerCase().includes(k));
+    const restTime = isCompound ? '2–3 min rest between sets' : '60–90 sec rest between sets';
+
     let setRows = dd.sets[key].map((s, si) =>
       `<div class="set-row">
         <div class="set-num">${si + 1}</div>
@@ -448,9 +467,13 @@ function renderDayPanel() {
         <div class="ex-sets-badge">${ex.sets}</div>
       </div>
       ${ex.note ? `<div class="ex-note-border">${ex.note}</div>` : ''}
+      <div class="ex-note-border" style="color:var(--text3); font-style:normal; display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px;">
+        <span>⏱ ${restTime}</span>
+        <span style="color:var(--text3);">Same weight all sets · add load when all reps hit</span>
+      </div>
       <div class="set-logger">
         <div class="set-logger-header">
-          <span>Log sets</span>
+          <span>Working sets — log weight &amp; reps</span>
           <span style="color:${day.color}">${countDoneSets(dd.sets['ex' + ei])} done</span>
         </div>
         <div id="sets_${currentDay}_${ei}">${setRows}</div>
@@ -479,13 +502,22 @@ function renderDayPanel() {
     </div>
     <div class="section-block">
       <div class="section-block-header" onclick="toggleBlock(this)">
-        <h3><span>🔥</span> Warm-up (12 min)</h3>
+        <h3><span>🔥</span> Warm-up — complete before working sets</h3>
         <span class="chevron">▾</span>
       </div>
-      <div class="section-block-body">${warmupItems}</div>
+      <div class="section-block-body">${warmupItems}${warmupNote}</div>
     </div>
     ${exHtml}
     ${finHtml}
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px; margin-bottom:10px;">
+      <div style="font-size:11px; font-family:'DM Mono',monospace; text-transform:uppercase; letter-spacing:0.06em; color:var(--text3); margin-bottom:10px;">Progressive overload rules</div>
+      <div style="font-size:13px; color:var(--text2); line-height:1.7;">
+        <div style="margin-bottom:6px;">✅ <strong style="font-weight:500; color:var(--text);">Hit all reps on all sets?</strong> Add 2.5–5kg next session.</div>
+        <div style="margin-bottom:6px;">⚠️ <strong style="font-weight:500; color:var(--text);">Couldn't hit the bottom rep on set 1?</strong> Drop weight by 5–10%. Never grind through bad form to chase numbers.</div>
+        <div style="margin-bottom:6px;">📅 <strong style="font-weight:500; color:var(--text);">Deload every 6–8 weeks</strong> — same exercises, drop volume by 40%, lighter weight. One week only, then resume.</div>
+        <div>💤 <strong style="font-weight:500; color:var(--text);">Sleep and protein</strong> are where muscle is actually built. Aim for 2g protein per kg of bodyweight daily.</div>
+      </div>
+    </div>
     <button class="complete-btn${isDone ? ' done' : ''}" onclick="toggleComplete()">
       ${isDone ? '✓ Day Complete' : 'Mark Day Complete'}
     </button>
